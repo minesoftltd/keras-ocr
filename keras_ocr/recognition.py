@@ -514,14 +514,13 @@ class Recognizer:
                 # Convert color to grayscale
                 image = cv2.cvtColor(image, code=cv2.COLOR_RGB2GRAY)
             for box in boxes:
-                crops.append(
-                    tools.warpBox(
-                        image=image,
-                        box=box,
-                        target_height=self.model.input_shape[1],
-                        target_width=self.model.input_shape[2],
-                    )
-                )
+                box_crop = image[int(box[0][1]):int(box[2][1]), int(box[0][0]):int(box[1][0])]
+                scale = min(31 / box_crop.shape[0], 200 / box_crop.shape[1])
+                img_resized = cv2.resize(box_crop, (int(scale * box_crop.shape[1]), int(scale * box_crop.shape[0])))
+                white = 255
+                full_img = (np.zeros((31,200)) + white).astype('uint8')
+                full_img[:img_resized.shape[0], :img_resized.shape[1]] = img_resized
+                crops.append(full_img)
             start = 0 if not start_end else start_end[-1][1]
             start_end.append((start, start + len(boxes)))
         if not crops:
